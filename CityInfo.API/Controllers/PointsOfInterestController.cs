@@ -1,35 +1,63 @@
 ﻿using CityInfo.API.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CityInfo.API.Controllers
+namespace CityInfo.API.Controllers;
+
+[Route("api/cities/{cityId}/pointsofinterest")]
+[ApiController]
+public class PointsOfInterestController : ControllerBase
 {
-    [Route("api/cities/{cityId}/pointsofinterest")]
-    [ApiController]
-    public class PointsOfInterestController : ControllerBase
+    [HttpGet]
+    public ActionResult<IEnumerable<PointOfInterestDTO>> GetPointsOfInterest(int cityId)
     {
-        [HttpGet]
-        public ActionResult<IEnumerable<PointOfInterestDTO>> GetPointsOfInterest(int cityId)
+        var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+
+        if (city == null)
+            return NotFound();
+
+        return Ok(city.PointsOfInterest);
+    }
+
+    [HttpGet("{pointofinterestid}", Name = "GetPointOfInterest")]
+    public ActionResult<PointOfInterestDTO> GetPointOfInterest(int cityId, int pointOfInterestId)
+    {
+        var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+        if (city == null)
+            return NotFound();
+
+        var pointOfInterest = city.PointsOfInterest.FirstOrDefault(c => c.Id == pointOfInterestId);
+        if (pointOfInterest == null)
+            return NotFound();
+
+        return Ok(pointOfInterest);
+    }
+
+    [HttpPost]
+    public ActionResult<PointOfInterestDTO> CreatePointOfInterest([FromRoute] int cityId, [FromBody] PointOfInterestCreationDTO pointOfInterestCreationDTO)
+    {
+        var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+        if (city is null)
+            return NotFound();
+
+        var maxPointOfInterestId = CitiesDataStore.Current.Cities.SelectMany(c => c.PointsOfInterest).Max(p => p.Id);
+
+        var finalPointOfInterest = new PointOfInterestDTO()
         {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+            Id = ++maxPointOfInterestId,
+            Name = pointOfInterestCreationDTO.Name,
+            Description = pointOfInterestCreationDTO.Description,
+        };
 
-            if (city == null)
-                return NotFound();
+        city.PointsOfInterest.Add(finalPointOfInterest);
 
-            return Ok(city.PointsOfInterest);
-        }
+        return Created();
 
-        [HttpGet("{pointofinterestid}")]
-        public ActionResult<PointOfInterestDTO> GetPointOfInterest(int cityId, int pointOfInterestId)
-        {
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
-                return NotFound();
-
-            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(c => c.Id == pointOfInterestId);
-            if (pointOfInterest == null)
-                return NotFound();
-
-            return Ok(pointOfInterest);
-        }
+        //return CreatedAtRoute("GetPointOfInterest", new
+        //{
+        //    cityId = cityId,
+        //    pointOfInterest = finalPointOfInterest.Id
+        //},
+        //finalPointOfInterest
+        //);
     }
 }
