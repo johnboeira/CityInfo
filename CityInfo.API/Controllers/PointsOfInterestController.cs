@@ -98,16 +98,34 @@ public class PointsOfInterestController : ControllerBase
 
         pacthDocument.ApplyTo(pointOfInterestToPatch, ModelState);
 
-        if(!ModelState.IsValid){
+        if (!ModelState.IsValid)
+        {
             return BadRequest(ModelState);
         }
 
-        if(!TryValidateModel(pointOfInterestToPatch)){
+        if (!TryValidateModel(pointOfInterestToPatch))
+        {
             return BadRequest(ModelState);
         }
 
         pointOfInterestCallBack.Name = pointOfInterestToPatch.Name;
         pointOfInterestCallBack.Description = pointOfInterestToPatch.Description;
+
+        return NoContent();
+    }
+
+    [HttpDelete("{pointofinterestid}")]
+    public ActionResult DeletePointOfInterest([FromRoute] int cityId, [FromRoute] int pointofinterestid)
+    {
+        var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+        if (city == null)
+            return NotFound();
+
+        var pointOfInterestCallBack = city.PointsOfInterest.FirstOrDefault(c => c.Id == pointofinterestid);
+        if (pointOfInterestCallBack == null)
+            return NotFound();
+
+        city.PointsOfInterest.Remove(pointOfInterestCallBack);
 
         return NoContent();
     }
