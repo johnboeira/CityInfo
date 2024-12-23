@@ -4,6 +4,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+//Limpa providers e deus adiciona
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 builder.Services.AddControllers(options =>
 {
     options.ReturnHttpNotAcceptable = true;
